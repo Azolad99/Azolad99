@@ -7,10 +7,12 @@ from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from .db import Base, engine, get_db
 from .models import Employee, ShiftAssignment, ShiftTemplate
+from .routers.api import router as api_router
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -19,12 +21,29 @@ STATIC_DIR = BASE_DIR / "static"
 app = FastAPI(title="Shift Scheduler")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+# CORS for API usage
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API router
+app.include_router(api_router)
+
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
 
 
 @app.get("/")
