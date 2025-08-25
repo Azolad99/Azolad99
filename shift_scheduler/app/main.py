@@ -48,12 +48,21 @@ def health() -> dict[str, str]:
 
 @app.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
-    employees = db.query(Employee).order_by(Employee.name.asc()).all()
-    templates_ = db.query(ShiftTemplate).order_by(ShiftTemplate.name.asc()).all()
+    # Optional week start override: ?start=YYYY-MM-DD
+    start_param = request.query_params.get("start")
+    if start_param:
+        try:
+            today = date.fromisoformat(start_param)
+        except ValueError:
+            today = date.today()
+    else:
+        today = date.today()
 
-    today = date.today()
     start = today - timedelta(days=today.weekday())
     days = [start + timedelta(days=i) for i in range(7)]
+
+    employees = db.query(Employee).order_by(Employee.name.asc()).all()
+    templates_ = db.query(ShiftTemplate).order_by(ShiftTemplate.name.asc()).all()
 
     # Prefetch assignments for the week
     assignments = (
@@ -63,6 +72,9 @@ def home(request: Request, db: Session = Depends(get_db)):
     )
     assignments_by_key = {(a.employee_id, a.date): a for a in assignments}
 
+    prev_week = (start - timedelta(days=7)).isoformat()
+    next_week = (start + timedelta(days=7)).isoformat()
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -71,6 +83,9 @@ def home(request: Request, db: Session = Depends(get_db)):
             "templates": templates_,
             "days": days,
             "assignments_by_key": assignments_by_key,
+            "start": start,
+            "prev_week": prev_week,
+            "next_week": next_week,
         },
     )
 

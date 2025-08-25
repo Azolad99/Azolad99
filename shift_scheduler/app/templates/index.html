@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
+<section class="controls row between">
+	<div class="row">
+		<a class="btn" href="/?start={{ prev_week }}">◀ Prev week</a>
+		<a class="btn" href="/">Today</a>
+		<a class="btn" href="/?start={{ next_week }}">Next week ▶</a>
+	</div>
+	<div>
+		<span class="muted">Week of {{ start.strftime('%d %b %Y') }}</span>
+	</div>
+</section>
+
 <section class="grid">
 	<div>
 		<h2>Employees</h2>
-		<form method="post" action="/employees" class="stack">
+		<form method="post" action="/employees" class="stack card">
 			<label>Name <input type="text" name="name" required /></label>
 			<label>Role <input type="text" name="role" /></label>
 			<label class="row"><input type="checkbox" name="active" checked /> Active</label>
@@ -22,7 +33,7 @@
 	</div>
 	<div>
 		<h2>Shift Templates</h2>
-		<form method="post" action="/shift-templates" class="stack">
+		<form method="post" action="/shift-templates" class="stack card">
 			<label>Name <input type="text" name="name" required /></label>
 			<label>Start <input type="time" name="start_time" required /></label>
 			<label>End <input type="time" name="end_time" required /></label>
@@ -37,8 +48,12 @@
 </section>
 
 <section>
-	<h2>This Week</h2>
-	<div class="schedule">
+	<h2>Schedule</h2>
+	<div class="legend row">
+		<span class="badge badge--assigned">Assigned</span>
+		<span class="badge badge--empty">Unassigned</span>
+	</div>
+	<div class="schedule schedule--sticky">
 		<div class="schedule__head"></div>
 		{% for d in days %}
 			<div class="schedule__head">{{ d.strftime('%a %d %b') }}</div>
@@ -60,6 +75,8 @@
 					</form>
 					{% if a and a.shift_template %}
 					<div class="badge">{{ a.shift_template.name }}</div>
+					{% else %}
+					<div class="badge badge--empty">Empty</div>
 					{% endif %}
 				</div>
 			{% endfor %}
