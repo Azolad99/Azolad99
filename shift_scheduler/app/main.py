@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from .db import Base, engine, get_db
 from .models import Employee, ShiftAssignment, ShiftTemplate
 from .routers.api import router as api_router
+from .services.distributor import distribute_shifts_for_range
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -151,6 +152,25 @@ def assign_shift(
         db.commit()
 
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.post("/distribute-week")
+def distribute_week(request: Request, db: Session = Depends(get_db)):
+    # Determine current week range shown on the grid
+    start_param = request.query_params.get("start")
+    if start_param:
+        try:
+            today = date.fromisoformat(start_param)
+        except ValueError:
+            today = date.today()
+    else:
+        today = date.today()
+
+    start = today - timedelta(days=today.weekday())
+    end = start + timedelta(days=6)
+
+    distribute_shifts_for_range(db=db, start=start, end=end)
+    return RedirectResponse(url=f"/?start={start.isoformat()}", status_code=303)
 
 
 @app.post("/employees/{employee_id}/toggle")

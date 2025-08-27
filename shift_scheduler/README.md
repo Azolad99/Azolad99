@@ -48,6 +48,14 @@ curl -X POST http://localhost:8000/api/shift-templates -H 'Content-Type: applica
 # Assignments (upsert; pass null to unassign)
 curl -X POST http://localhost:8000/api/assignments -H 'Content-Type: application/json' \
   -d '{"employee_id":1,"date":"2025-01-01","shift_template_id":1}'
+  
+# Auto-distribute shifts
+# API
+curl -X POST http://localhost:8000/api/distribute -H 'Content-Type: application/json' \
+  -d '{"start":"2025-01-06","end":"2025-01-12","clear_existing":true}'
+
+# UI
+Use the "Auto-distribute week" button at the top of the schedule to fill the current week for all active employees with available shift templates.
 ```
 
 ## Docker

@@ -5,6 +5,9 @@
 		<a class="btn" href="/?start={{ prev_week }}">◀ Prev week</a>
 		<a class="btn" href="/">Today</a>
 		<a class="btn" href="/?start={{ next_week }}">Next week ▶</a>
+		<form method="post" action="/distribute-week?start={{ start.isoformat() }}" style="display:inline-block;margin-left:8px;">
+			<button type="submit" class="btn">Auto-distribute week</button>
+		</form>
 	</div>
 	<div>
 		<span class="muted">Week of {{ start.strftime('%d %b %Y') }}</span>
