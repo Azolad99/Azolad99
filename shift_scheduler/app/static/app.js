@@ -1,0 +1,1 @@
+// Placeholder for future interactivity (e.g., drag-to-assign, keyboard shortcuts)

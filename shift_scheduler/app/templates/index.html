@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="controls row between">
+	<div class="row">
+		<a class="btn" href="/?start={{ prev_week }}">◀ Prev week</a>
+		<a class="btn" href="/">Today</a>
+		<a class="btn" href="/?start={{ next_week }}">Next week ▶</a>
+	</div>
+	<div>
+		<span class="muted">Week of {{ start.strftime('%d %b %Y') }}</span>
+	</div>
+</section>
+
+<section class="grid">
+	<div>
+		<h2>Employees</h2>
+		<form method="post" action="/employees" class="stack card">
+			<label>Name <input type="text" name="name" required /></label>
+			<label>Role <input type="text" name="role" /></label>
+			<label class="row"><input type="checkbox" name="active" checked /> Active</label>
+			<button type="submit">Add Employee</button>
+		</form>
+		<ul class="list">
+			{% for e in employees %}
+			<li class="row between">
+				<span>{{ e.name }}{% if e.role %} — {{ e.role }}{% endif %}{% if not e.active %} (inactive){% endif %}</span>
+				<form method="post" action="/employees/{{ e.id }}/toggle">
+					<button type="submit">{{ 'Activate' if not e.active else 'Deactivate' }}</button>
+				</form>
+			</li>
+			{% endfor %}
+		</ul>
+	</div>
+	<div>
+		<h2>Shift Templates</h2>
+		<form method="post" action="/shift-templates" class="stack card">
+			<label>Name <input type="text" name="name" required /></label>
+			<label>Start <input type="time" name="start_time" required /></label>
+			<label>End <input type="time" name="end_time" required /></label>
+			<button type="submit">Add Template</button>
+		</form>
+		<ul class="list">
+			{% for t in templates %}
+			<li>{{ t.name }} ({{ '%02d:%02d'|format(t.start_time.hour, t.start_time.minute) }} - {{ '%02d:%02d'|format(t.end_time.hour, t.end_time.minute) }})</li>
+			{% endfor %}
+		</ul>
+	</div>
+</section>
+
+<section>
+	<h2>Schedule</h2>
+	<div class="legend row">
+		<span class="badge badge--assigned">Assigned</span>
+		<span class="badge badge--empty">Unassigned</span>
+	</div>
+	<div class="schedule schedule--sticky">
+		<div class="schedule__head"></div>
+		{% for d in days %}
+			<div class="schedule__head">{{ d.strftime('%a %d %b') }}</div>
+		{% endfor %}
+		{% for e in employees %}
+			<div class="schedule__emp">{{ e.name }}</div>
+			{% for d in days %}
+				<div class="schedule__cell">
+					{% set a = assignments_by_key.get((e.id, d)) %}
+					<form method="post" action="/assign" class="assign-form">
+						<input type="hidden" name="employee_id" value="{{ e.id }}" />
+						<input type="hidden" name="date_str" value="{{ d.isoformat() }}" />
+						<select name="template_id" onchange="this.form.submit()">
+							<option value="0">—</option>
+							{% for t in templates %}
+							<option value="{{ t.id }}" {% if a and a.shift_template_id==t.id %}selected{% endif %}>{{ t.name }}</option>
+							{% endfor %}
+						</select>
+					</form>
+					{% if a and a.shift_template %}
+					<div class="badge">{{ a.shift_template.name }}</div>
+					{% else %}
+					<div class="badge badge--empty">Empty</div>
+					{% endif %}
+				</div>
+			{% endfor %}
+		{% endfor %}
+	</div>
+</section>
+{% endblock %}
