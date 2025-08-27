@@ -16,6 +16,8 @@ from ..schemas import (
     AssignmentCreate,
     AssignmentOut,
 )
+from ..schemas import DistributeRequest, DistributeResponse
+from ..services.distributor import distribute_shifts_for_range
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -163,3 +165,19 @@ def delete_assignment(assignment_id: int, db: Session = Depends(get_db)):
     db.delete(assignment)
     db.commit()
     return Response(status_code=204)
+
+
+# Distribution
+@router.post("/distribute", response_model=DistributeResponse)
+def distribute(payload: DistributeRequest, db: Session = Depends(get_db)):
+    if payload.start > payload.end:
+        raise HTTPException(status_code=400, detail="start must be <= end")
+    result = distribute_shifts_for_range(
+        db=db,
+        start=payload.start,
+        end=payload.end,
+        template_ids=payload.template_ids,
+        employee_ids=payload.employee_ids,
+        clear_existing=payload.clear_existing,
+    )
+    return result

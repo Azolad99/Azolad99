@@ -50,3 +50,19 @@ class AssignmentOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DistributeRequest(BaseModel):
+    start: date
+    end: date
+    template_ids: list[int] | None = None
+    employee_ids: list[int] | None = None
+    clear_existing: bool = False
+
+
+class DistributeResponse(BaseModel):
+    created: int
+    updated: int
+    cleared: int
+    skipped_days_without_templates: int
+    total_days: int
